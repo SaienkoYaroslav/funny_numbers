@@ -21,11 +21,9 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,8 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.funnynumbers.data.db.NumberEntity
-import com.example.funnynumbers.data.mapper.Mapper
-import com.example.funnynumbers.domain.model.MyNumber
 import com.example.funnynumbers.ui.navigation.NavScreen
 import com.example.funnynumbers.ui.theme.Purple40
 import kotlinx.coroutines.launch
@@ -51,12 +47,9 @@ fun MainScreen(
     var text by remember {
         mutableStateOf("")
     }
+
     val scope = rememberCoroutineScope()
-    val mapper = Mapper()
-    val mutableListNumbers: MutableList<MyNumber> = remember { mutableStateListOf() }
-    val listNumbers: List<MyNumber> by rememberUpdatedState(mutableListNumbers)
-    val listss = mutableListNumbers.get(0)
-    val listBD = mapper.mapMyNumberToNumberEntity(listss)
+
     val numbersListFromDb = numberViewModel.numbersList.collectAsState(initial = emptyList())
 
     Column(
@@ -94,9 +87,8 @@ fun MainScreen(
             onClick = {
                 scope.launch {
                     if (text.trim().toIntOrNull() != null) {
-                        val number =
-                            numberViewModel.getNumberById(text.trim().toInt())
-                        mutableListNumbers.add(number)
+                        val number = text.trim().toInt()
+                        numberViewModel.insertNumber(number)
                     } else {
                         Toast.makeText(
                             context,
@@ -118,9 +110,7 @@ fun MainScreen(
         Button(
             onClick = {
                 scope.launch {
-                    val number =
-                        numberViewModel.getRandomNumber()
-                    mutableListNumbers.add(number)
+                    numberViewModel.insertRandomNumber()
                 }
             }
         ) {
@@ -147,10 +137,11 @@ fun MainScreen(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            items(items = listNumbers.reversed()) { item ->
+            items(items = numbersListFromDb.value.reversed()) { item ->
                 ListItem(
                     number = item,
-                    navController = navController
+                    navController = navController,
+                    numberViewModel
                 )
             }
         }
@@ -161,13 +152,21 @@ fun MainScreen(
 @Composable
 fun ListItem(
     number: NumberEntity,
-    navController: NavHostController
+    navController: NavHostController,
+    numberViewModel: NumberViewModel
 ) {
+    var isEnable by remember {
+        mutableStateOf(true)
+    }
 
     Row(
         Modifier
             .fillMaxSize()
-            .clickable {
+            .clickable(
+                enabled = isEnable
+            ) {
+                isEnable = false
+                numberViewModel.detailNumber = number
                 navController.navigate(NavScreen.DetailScreen.route)
             },
         horizontalArrangement = Arrangement.Start,

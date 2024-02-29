@@ -7,9 +7,9 @@ import androidx.room.PrimaryKey
 data class NumberEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int? = null,
-    val text: String,
-    val found: Boolean,
-    val number: Int,
-    val type: String,
-    val date: String
+    val text: String?,
+    val found: Boolean?,
+    val number: Int?,
+    val type: String?,
+    val date: String?
 )

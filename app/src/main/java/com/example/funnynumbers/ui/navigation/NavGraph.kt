@@ -17,7 +17,7 @@ fun NavGraph(
     NavHost(
         navController = navHostController,
         startDestination = NavScreen.MainScreen.route
-    ){
+    ) {
 
         composable(
             route = NavScreen.MainScreen.route
@@ -28,7 +28,7 @@ fun NavGraph(
         composable(
             route = NavScreen.DetailScreen.route
         ) {
-            DetailScreen()
+            DetailScreen(numberViewModel = viewModel, navController = navHostController)
         }
 
     }
